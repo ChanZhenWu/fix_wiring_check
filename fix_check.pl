@@ -1,5 +1,6 @@
+#!/usr/bin/perl
 print "\n*****************************************************************************\n";
-print "  3070 wiring check script <v0.2>\n";
+print "  3070 wiring check script <v0.3>\n";
 print "  Author: Noon Chen\n";
 print "  A Professional Tool for Test.\n";
 print "  ",scalar localtime;
@@ -21,8 +22,100 @@ my $BRC = '';
 my @node = '';
 my @nodes = '';
 
+my $wirelist = "wirelist.o";
+
+if(-e $wirelist){
+	print "  project files found.\n\n";
+	}
+else{
+	print "  fixture only project.\n\n";
+# Generate the demo config file for full bank
+	open (Config, ">config");
+	print Config "!!!!    5    0    2 1493432712  Vc903                                         \n";
+	print Config "target hp3073 standard\n";
+	print Config "enable common delimiter\n";
+	print Config "enable express fixturing\n";
+	print Config "enable software revision b\n";
+
+	print Config "module 0\n";
+	print Config "cards 1 asru c revision\n";
+	print Config "cards 2 to 5 hybrid standard double density\n";
+	print Config "cards 6 control xt\n";
+	print Config "cards 7 to 11 hybrid standard double density\n";
+	print Config "end module\n";
+
+	print Config "module 1\n";
+	print Config "cards 1 asru c revision\n";
+	print Config "cards 2 to 5 hybrid standard double density\n";
+	print Config "cards 6 control xt\n";
+	print Config "cards 7 to 11 hybrid standard double density\n";
+	print Config "end module\n";
+
+	print Config "module 2\n";
+	print Config "cards 1 asru c revision\n";
+	print Config "cards 2 to 5 hybrid standard double density\n";
+	print Config "cards 6 control xt\n";
+	print Config "cards 7 to 11 hybrid standard double density\n";
+	print Config "end module\n";
+
+	print Config "module 3\n";
+	print Config "cards 1 asru c revision\n";
+	print Config "cards 2 to 5 hybrid standard double density\n";
+	print Config "cards 6 control xt\n";
+	print Config "cards 7 to 11 hybrid standard double density\n";
+	print Config "end module\n";
+
+	close Config;
+	#my $value = system ("comp 'config' -l > Null");
+	
+# Generate the demo board file
+	open (Board, ">board");
+	print Board "HEADING\n";
+	close Board;
+	#system ("check board 'board'");
+	#$value = system ("comp 'board' -l > Null");
+	
+# Gerarate the demo board_xy file
+	open (Boardxy, ">board_xy");
+	print Boardxy "!!!!   15    1    1 1469081253   0000                                         \n";
+	print Boardxy "	UNITS  MILS;\n";
+	print Boardxy "	SCALE  0.1;\n";
+
+	open (Fixture, "<fixture/fixture.o");
+	while (my $array = <Fixture>)
+		{
+		$array =~ s/(^\s+|\s+$)//g;
+		if($array =~ "PLACEMENT"){
+			print Boardxy "	",$array,"\n";
+			while($array = <Fixture>)
+				{
+				$array =~ s/(^\s+|\s+$)//g;
+				last if ($array =~ "NODE|BOARD|KEEPOUT");
+				print Boardxy "	",$array,"\n";
+			}
+		}
+	}
+	close Fixture;
+	close Boardxy;
+	#$value = system ("comp 'board_xy' -l > Null");
+
+# Gerarate the demo wirelist file
+	open (Wirelist, ">wirelist");
+	print Wirelist "!!!!   10    0    1 1504779331   0000                                         \n";
+	print Wirelist "test shorts \"fix_pins\"","\n";
+	print Wirelist "end test\n";
+	print Wirelist "test shorts \"fix_shorts\"","\n";
+	print Wirelist "end test\n";
+	close Wirelist;
+	#$value = system ("comp 'wirelist' -l > Null");
+
+}
+
+
 open (fix_pins, ">fix_pins");
 open (fix_shorts, ">fix_shorts");
+print fix_pins "!!!!   16    0    1 1460865776   0000                                         \n";
+print fix_shorts "!!!!    9    0    1 1460733871   0000                                         \n";
 
 open (Fixture, "< ./fixture/fixture.o");
 open (Report, ">Details.txt");
