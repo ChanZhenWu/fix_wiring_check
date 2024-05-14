@@ -8,7 +8,7 @@ print "\n***********************************************************************
 
 use strict;
 use warnings;
-use List::MoreUtils 'uniq';
+use List::Util 'uniq';
 
 ############################### process fixture.o ########################################
 
