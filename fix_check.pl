@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 print "\n*****************************************************************************\n";
-print "  3070 wiring check script <v0.4>\n";
+print "  3070 wiring check script <v0.5>\n";
 print "  Author: Noon Chen\n";
 print "  A Professional Tool for Test.\n";
 print "  ",scalar localtime;
@@ -16,9 +16,11 @@ print  "\n  >>> processing fixture.o ... \n\n";
 my $Nnum = 0;	#node numbers
 my $Wnum = 0;   #Wire numbers
 my @shorts = ();
+my @Spins =();
 my @pins =();
 my $short_pair = '';
 my $BRC = '';
+my $BRCbuffer = '';
 my @node = '';
 my @nodes = '';
 
@@ -156,23 +158,28 @@ open (Report, ">Details.txt");
 							if($node[0] !~ /(\D+)/) {($BRC) = $node[0] =~ /(\d+)/;
 								next if(substr($BRC,-2) =~ /(19|20|39|40|59|60)/);	#eliminate fixed GROUND
 								next if(substr($BRC,0,3) =~ /(201|213|111|123|106|118|206|218)/);	#eliminate ASRU/Control card				
+								next if($BRCbuffer eq $BRC);
 								$Wnum++;
 								print "   Wire\#:$Wnum	",$BRC,"\n";
 								print Report $BRC."\n";
+								$BRCbuffer = $BRC;
 								unshift(@pair, $BRC);
 								if($BRCnum > 0)		#collect shorts data
 									{
 									#print $BRC,"\n";
 									if($BRC < $pair[$BRCnum]){$short_pair = $BRC." to ".$pair[$BRCnum]."	\!".$nodes[1]."\n";}
 									if($BRC > $pair[$BRCnum]){$short_pair = $pair[$BRCnum]." to ".$BRC."	\!".$nodes[1]."\n";}
-									print "	",$short_pair;
-									push(@shorts, "short ".$short_pair);
+									print Report " -- ".$short_pair;
+									#push(@shorts, "short ".$short_pair);
+									push(@shorts, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."short ".$short_pair);
 									push(@pins, "nodes  ".$BRC."	\!$nodes[1]\n");
+									push(@Spins, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."nodes  ".$BRC."	\!$nodes[1]\n");
 									#print @shorts;
 								}
 								else		#collect pins data
 									{
 									push(@pins, "nodes  ".$BRC."	\!$nodes[1]\n");
+									push(@Spins, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."nodes  ".$BRC."	\!$nodes[1]\n");
 								}
 								$BRCnum++;
 							}
@@ -184,13 +191,21 @@ open (Report, ">Details.txt");
 	NEXT_NODE:
 	}
 	my @unique_pins = uniq @pins;
+	my @unique_Spins = uniq @Spins;
 	my @unique_shorts = uniq @shorts;
+
+	print fix_shorts "! Shorts Scalar: ".scalar@unique_shorts."\n";
+	print fix_shorts "! Nodes Scalar: ".scalar@unique_Spins."\n";
+	print fix_pins "! Nodes Scalar: ".scalar@unique_pins."\n";
 
 	print fix_shorts "  threshold 12\n  settling delay 1m\n";
 	print fix_shorts sort @unique_shorts;
-	print fix_shorts "  threshold 1000\n";
+	print fix_shorts ' failure ""'."\n";
+	print fix_shorts '!#########################################################################################'."\n";
 
-	print fix_shorts sort @unique_pins;
+	print fix_shorts "  threshold 1000\n";
+	print fix_shorts sort @unique_Spins;
+	print fix_shorts ' failure ""'."\n";
 	print fix_pins sort @unique_pins;
 
 close Report;
