@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 print "\n*****************************************************************************\n";
-print "  3070 wiring check script <v0.3>\n";
+print "  3070 wiring check script <v0.4>\n";
 print "  Author: Noon Chen\n";
 print "  A Professional Tool for Test.\n";
 print "  ",scalar localtime;
@@ -102,10 +102,10 @@ else{
 # Gerarate the demo wirelist file
 	open (Wirelist, ">wirelist");
 	print Wirelist "!!!!   10    0    1 1504779331   0000                                         \n";
-	print Wirelist "test shorts \"fix_pins\"","\n";
-	print Wirelist "end test\n";
-	print Wirelist "test shorts \"fix_shorts\"","\n";
-	print Wirelist "end test\n";
+#	print Wirelist "test shorts \"fix_pins\"","\n";
+#	print Wirelist "end test\n";
+#	print Wirelist "test shorts \"fix_shorts\"","\n";
+#	print Wirelist "end test\n";
 	close Wirelist;
 	#$value = system ("comp 'wirelist' -l > Null");
 
@@ -197,6 +197,14 @@ close Report;
 close Fixture;
 close fix_shorts;
 close fix_pins;
+
+
+	open (Wirelist, ">>wirelist");
+	print Wirelist "\ntest shorts \"fix_pins\"","\n";
+	print Wirelist "end test\n";
+	print Wirelist "test shorts \"fix_shorts\"","\n";
+	print Wirelist "end test\n";
+	close Wirelist;
 
 
 print "\n  >>> done ...\n\n";
