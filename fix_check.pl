@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 print "\n*****************************************************************************\n";
-print "  3070 wiring check script <v0.5>\n";
+print "  3070 wiring check script <v0.6>\n";
 print "  Author: Noon Chen\n";
 print "  A Professional Tool for Test.\n";
 print "  ",scalar localtime;
@@ -137,6 +137,7 @@ open (Report, ">Details.txt");
 				{
 				$Nnum++;
 				if($nodes[1] =~ '\%'){$nodes[1] = substr($nodes[1], 3, -1)}
+				if($nodes[1] =~ '\"'){$nodes[1] = substr($nodes[1], 1, -1)}
 				#next if($nodes[1] =~ /(^NC_|_NC$|NONE)/);	#eliminate NC nets
 				print "Probe\#:$Nnum	$nodes[1]\n";
 				print Report "	#$Nnum\n";
@@ -167,19 +168,19 @@ open (Report, ">Details.txt");
 								if($BRCnum > 0)		#collect shorts data
 									{
 									#print $BRC,"\n";
-									if($BRC < $pair[$BRCnum]){$short_pair = $BRC." to ".$pair[$BRCnum]."	\!".$nodes[1]."\n";}
-									if($BRC > $pair[$BRCnum]){$short_pair = $pair[$BRCnum]." to ".$BRC."	\!".$nodes[1]."\n";}
+									if($BRC < $pair[$BRCnum]){$short_pair = $BRC." to ".$pair[$BRCnum]."  \!".$nodes[1]."\n";}
+									if($BRC > $pair[$BRCnum]){$short_pair = $pair[$BRCnum]." to ".$BRC."  \!".$nodes[1]."\n";}
 									print Report " -- ".$short_pair;
 									#push(@shorts, "short ".$short_pair);
 									push(@shorts, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."short ".$short_pair);
-									push(@pins, "nodes  ".$BRC."	\!$nodes[1]\n");
-									push(@Spins, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."nodes  ".$BRC."	\!$nodes[1]\n");
+									push(@pins, "nodes  ".$BRC."  \!$nodes[1]\n");
+									push(@Spins, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."nodes  ".$BRC."  \!$nodes[1]\n");
 									#print @shorts;
 								}
 								else		#collect pins data
 									{
-									push(@pins, "nodes  ".$BRC."	\!$nodes[1]\n");
-									push(@Spins, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."nodes  ".$BRC."	\!$nodes[1]\n");
+									push(@pins, "nodes  ".$BRC."  \!$nodes[1]\n");
+									push(@Spins, ' failure '.'" >> Node: '.$nodes[1].'"'."\n"."nodes  ".$BRC."  \!$nodes[1]\n");
 								}
 								$BRCnum++;
 							}
@@ -224,6 +225,9 @@ close fix_pins;
 
 print "\n  >>> done ...\n\n";
 
+print "\n";
+system 'pause';
+exit;
 
 ##########################################################################################
 
