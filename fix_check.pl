@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 print "\n*****************************************************************************\n";
-print "  3070 wiring check script <v0.7>\n";
+print "  3070 wiring check script <v1.0>\n";
 print "  Author: Noon Chen\n";
 print "  A Professional Tool for Test.\n";
 print "  ",scalar localtime;
@@ -23,6 +23,7 @@ my $BRC = '';
 my $BRCbuffer = '';
 my @node = '';
 my @nodes = '';
+my $panel = "";
 
 my $wirelist = "wirelist.o";
 
@@ -75,7 +76,7 @@ else{
 	print Board "HEADING\n";
 	close Board;
 	#system ("check board 'board'");
-	#$value = system ("comp 'board' -l > Null");
+	#$value = system ("bcomp 'board' -l > Null");
 	
 # Gerarate the demo board_xy file
 	open (Boardxy, ">board_xy");
@@ -85,21 +86,22 @@ else{
 
 	open (Fixture, "<fixture/fixture.o");
 	while (my $array = <Fixture>)
-		{
+	{
 		$array =~ s/(^\s+|\s+$)//g;
-		if($array =~ "PLACEMENT"){
+		if($array =~ "PLACEMENT")
+		{
 			print Boardxy "	",$array,"\n";
 			while($array = <Fixture>)
-				{
+			{
 				$array =~ s/(^\s+|\s+$)//g;
 				last if ($array =~ "NODE|BOARD|KEEPOUT");
 				print Boardxy "	",$array,"\n";
+				}
 			}
 		}
-	}
 	close Fixture;
 	close Boardxy;
-	#$value = system ("comp 'board_xy' -l > Null");
+	#$value = system ("bcomp 'board_xy' -l > Null");
 
 # Gerarate the demo wirelist file
 	open (Wirelist, ">wirelist");
@@ -109,9 +111,8 @@ else{
 #	print Wirelist "test shorts \"fix_shorts\"","\n";
 #	print Wirelist "end test\n";
 	close Wirelist;
-	#$value = system ("comp 'wirelist' -l > Null");
-
-}
+	#$value = system ("wcomp 'wirelist' -l > Null");
+	}
 
 
 open (fix_pins, ">fix_pins");
@@ -122,19 +123,20 @@ print fix_shorts "!!!!    9    0    1 1460733871   0000                         
 open (Fixture, "< ./fixture/fixture.o");
 open (Report, ">Details.txt");
 	while(my $LIST = <Fixture>)
-		{
+	{
 		$LIST =~ s/(^\s+|\s+$)//g;		#clear all non-character symbol
 		next if(!$LIST);				#goto next if it's empty
 		my @nodes = split('\s+', $LIST);
-		if ($LIST eq "PROTECTED UNIT"){last;}
+		last if ($LIST eq "PROTECTED UNIT");
+		if ($LIST =~ "END PANEL"){$panel = "True";}
 
 		if($nodes[0] eq "NODE")
-			{
+		{
 			$LIST = <Fixture>;
 			$LIST =~ s/(^\s+|\s+$)//g;
 			next if(!$LIST);			#goto next if it's empty
 			if($LIST ne "PROBES")
-				{
+			{
 				$Nnum++;
 				if($nodes[1] =~ '\%'){$nodes[1] = substr($nodes[1], 3, -1)}
 				if($nodes[1] =~ '\"'){$nodes[1] = substr($nodes[1], 1, -1)}
@@ -143,16 +145,16 @@ open (Report, ">Details.txt");
 				print Report "	#$Nnum\n";
 				print Report "$nodes[1]\n";
 				while($LIST = <Fixture>)
-					{
+				{
 					$LIST =~ s/(^\s+|\s+$)//g;
 					last if(!$LIST);		#exit loop if it's none-character symbol				
 					if($LIST eq "WIRES")
-						{
+					{
 						my @pair = ();
 						#print @pair."\n";
 						my $BRCnum = 0;	#BRC numbers
 						while($LIST = <Fixture>)
-							{
+						{
 							$LIST =~ s/(^\s+|\s+$)//g;	   #clear all non-character symbol
 							goto NEXT_NODE if(!$LIST);		#exit loop if it's none-character symbol
 							@node = split('\s+', $LIST);
@@ -166,7 +168,7 @@ open (Report, ">Details.txt");
 								$BRCbuffer = $BRC;
 								unshift(@pair, $BRC);
 								if($BRCnum > 0)		#collect shorts data
-									{
+								{
 									#print $BRC,"\n";
 									if($BRC < $pair[$BRCnum]){$short_pair = $BRC." to ".$pair[$BRCnum]."\n";}
 									if($BRC > $pair[$BRCnum]){$short_pair = $pair[$BRCnum]." to ".$BRC."\n";}
@@ -174,39 +176,41 @@ open (Report, ">Details.txt");
 									#push(@shorts, "short ".$short_pair);
 									push(@shorts, 'failure '.'" >> Node: '.$nodes[1].'"'."\n"."  short ".$short_pair);
 									push(@pins, "nodes  ".$BRC."  \!$nodes[1]\n");
-									push(@Spins, 'failure '.'" >> Node: '.$nodes[1].'"'."\n"."  nodes  ".$BRC."  \n");
+									push(@Spins, 'failure '.'" >> Node: '.$nodes[1].'"'."\n"."  nodes  ".$BRC."\n");
 									#print @shorts;
-								}
+									}
 								else		#collect pins data
-									{
+								{
 									push(@pins, "nodes  ".$BRC."  \!$nodes[1]\n");
 									push(@Spins, 'failure '.'" >> Node: '.$nodes[1].'"'."\n"."  nodes  ".$BRC."\n");
-								}
+									}
 								$BRCnum++;
+								}
 							}
 						}
 					}
 				}
 			}
+		NEXT_NODE:
 		}
-	NEXT_NODE:
-	}
 	my @unique_pins = uniq @pins;
 	my @unique_Spins = uniq @Spins;
 	my @unique_shorts = uniq @shorts;
 
-	print fix_shorts "! Shorts Scalar: ".scalar@unique_shorts."\n";
-	print fix_shorts "! Nodes Scalar: ".scalar@unique_Spins."\n";
-	print fix_pins "! Nodes Scalar: ".scalar@unique_pins."\n";
+	print "\n\tShorts Scale: ".scalar@unique_shorts."\n";
+	print fix_shorts "! Shorts Scale: ".scalar@unique_shorts."\n";
+	print "\tNodes Scale: ".scalar@unique_Spins;
+	print fix_shorts "! Nodes Scale: ".scalar@unique_Spins."\n";
+	print fix_pins "! Nodes Scale: ".scalar@unique_pins."\n";
 
 	print fix_shorts "  threshold 12\n  settling delay 1m\n";
 	print fix_shorts sort @unique_shorts;
-	print fix_shorts ' failure ""'."\n";
+	print fix_shorts 'failure ""'."\n";
 	print fix_shorts '!#########################################################################################'."\n";
 
 	print fix_shorts "  threshold 1000\n";
 	print fix_shorts sort @unique_Spins;
-	print fix_shorts ' failure ""'."\n";
+	print fix_shorts 'failure ""'."\n";
 	print fix_pins sort @unique_pins;
 
 close Report;
@@ -222,12 +226,20 @@ close fix_pins;
 	print Wirelist "end test\n";
 	close Wirelist;
 
+if ($panel eq "True"){
+	rename "fix_pins", "1%fix_pins";
+	rename "fix_shorts", "1%fix_shorts";
+	print  "\n	>>> '1%fix_pins','1%fix_shorts' file generated ... \n";
+	}
+else{
+	print  "\n	>>> 'fix_pins','fix_shorts' file generated ... \n";
+	}
 
 print "\n  >>> done ...\n\n";
 
-print "\n";
-system 'pause';
-exit;
+# print "\n";
+# system 'pause';
+# exit;
 
 ##########################################################################################
 
