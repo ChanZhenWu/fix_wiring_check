@@ -15,20 +15,13 @@ use List::Util 'uniq';
 print  "\n  >>> processing fixture.o ... \n\n";
 my $Nnum = 0;	#node numbers
 my $Wnum = 0;   #Wire numbers
-my @shorts = ();
-my @Spins =();
-my @pins =();
-my $short_pair = '';
-my $BRC = '';
-my $BRCbuffer = '';
-my @node = '';
-my @nodes = '';
-my $panel = "";
+my @shorts = (); my @Spins =(); my @pins =(); my $short_pair = ''; my $BRC = '';
+my $BRCbuffer = ''; my @node = ''; my @nodes = ''; my $panel = "";
 
 my $wirelist = "wirelist.o";
 
 if(-e $wirelist){
-	print "  project files found.\n\n";
+	print "  project files has found.\n\n";
 	}
 else{
 	print "  fixture only project.\n\n";
@@ -84,7 +77,8 @@ else{
 	print Boardxy "	UNITS  MILS;\n";
 	print Boardxy "	SCALE  0.1;\n";
 
-	open (Fixture, "<fixture/fixture.o");
+	open (Fixture, "<fixture/fixture.o") or warn "\t!!! Failed to open 'fixture.o' file: $!.\n";
+		if ($! eq "No such file or directory"){print "\n\t>>> program exiting ...\n"; <STDIN>; exit;}
 	while (my $array = <Fixture>)
 	{
 		$array =~ s/(^\s+|\s+$)//g;
@@ -120,7 +114,8 @@ open (fix_shorts, ">fix_shorts");
 print fix_pins "!!!!   16    0    1 1460865776   0000                                         \n";
 print fix_shorts "!!!!    9    0    1 1460733871   0000                                         \n";
 
-open (Fixture, "< ./fixture/fixture.o");
+open (Fixture, "< ./fixture/fixture.o") or warn "\t!!! Failed to open 'fixture.o' file: $!.\n";
+	if ($! eq "No such file or directory"){print "\n\t>>> program exiting ...\n"; <STDIN>; exit;}
 open (Report, ">Details.txt");
 	while(my $LIST = <Fixture>)
 	{
